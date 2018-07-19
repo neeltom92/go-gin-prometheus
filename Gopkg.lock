@@ -49,12 +49,6 @@
   version = "v1.0.1"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mcuadros/go-gin-prometheus"
-  packages = ["."]
-  revision = "3f93884fa240fd102425d65ce9781e561ba40496"
-
-[[projects]]
   name = "github.com/modern-go/concurrent"
   packages = ["."]
   revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
@@ -144,6 +138,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "23a4ffeb436b014c2d5384c770d78306c3e5d03d994d31fb918fd6892ed5922f"
+  inputs-digest = "3a125d61fdd569741ec09f5b42998af29f51bdb9d2779c369ca214e8aa1f7869"
   solver-name = "gps-cdcl"
   solver-version = 1
