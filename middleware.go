@@ -129,7 +129,7 @@ func NewPrometheus(subsystem string, expandedParams []string) *Prometheus {
 		MetricsList: metricsList,
 		MetricsPath: defaultMetricPath,
 		ReqCntURLLabelMappingFn: func(c *gin.Context) string {
-			url := c.Request.URL.String() // i.e. by default do nothing, i.e. return URL as is
+			url := c.Request.URL.EscapedPath() // i.e. by default do nothing, i.e. return URL as is
 			for _, p := range c.Params {
 				if contains(expandedParams, p.Key) {
 					continue
