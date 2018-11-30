@@ -353,6 +353,20 @@ func (p *Prometheus) Use(e *gin.Engine) {
 	p.setMetricsPath(e)
 }
 
+func (p *Prometheus) UseWithCustomMetrics(e *gin.Engine, gatherer prometheus.Gatherers) {
+	e.Use(prometheusHandlerFor(gatherer))
+	p.setMetricsPathWithCustomMetrics(e, gatherer)
+}
+
+func (p *Prometheus) setMetricsPathWithCustomMetrics(e *gin.Engine, gatherer prometheus.Gatherers) {
+	if p.listenAddress != "" {
+		p.router.GET(p.MetricsPath, prometheusHandlerFor(gatherer))
+		p.runServer()
+	} else {
+		e.GET(p.MetricsPath, prometheusHandlerFor(gatherer))
+	}
+}
+
 // UseWithAuth adds the middleware to a gin engine with BasicAuth.
 func (p *Prometheus) UseWithAuth(e *gin.Engine, accounts gin.Accounts) {
 	e.Use(p.handlerFunc())
@@ -385,6 +399,13 @@ func (p *Prometheus) handlerFunc() gin.HandlerFunc {
 
 func prometheusHandler() gin.HandlerFunc {
 	h := promhttp.Handler()
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+func prometheusHandlerFor(gatherer prometheus.Gatherers) gin.HandlerFunc {
+	h := promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{})
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
 	}
