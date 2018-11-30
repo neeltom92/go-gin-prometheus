@@ -354,7 +354,6 @@ func (p *Prometheus) Use(e *gin.Engine) {
 }
 
 func (p *Prometheus) UseWithCustomMetrics(e *gin.Engine, gatherer prometheus.Gatherers) {
-	e.Use(prometheusHandlerFor(gatherer))
 	p.setMetricsPathWithCustomMetrics(e, gatherer)
 }
 
