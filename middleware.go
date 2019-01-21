@@ -15,8 +15,6 @@ import (
 	"strings"
 )
 
-var defaultMetricPath = "/metrics"
-
 // Standard default metrics
 //	counter, counter_vec, gauge, gauge_vec,
 //	histogram, histogram_vec, summary, summary_vec
@@ -207,15 +205,30 @@ func (p *Prometheus) setMetricsPathWithAuth(e *gin.Engine, accounts gin.Accounts
 
 func (p *Prometheus) runServer() {
 	if p.listenAddress != "" {
-		go p.router.Run(p.listenAddress)
+		go func() {
+			if err := p.router.Run(p.listenAddress); err != nil {
+				log.Error(err.Error())
+			}
+		}()
 	}
 }
 
 func (p *Prometheus) getMetrics() []byte {
-	response, _ := http.Get(p.Ppg.MetricsURL)
+	response, err := http.Get(p.Ppg.MetricsURL)
+	if err != nil {
+		log.Error(err.Error())
+	}
 
-	defer response.Body.Close()
-	body, _ := ioutil.ReadAll(response.Body)
+	defer func() {
+		if err := response.Body.Close(); err != nil {
+			log.Error(err.Error())
+		}
+	}()
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Error(err.Error())
+	}
 
 	return body
 }
@@ -233,7 +246,7 @@ func (p *Prometheus) sendMetricsToPushGateway(metrics []byte) {
 	client := &http.Client{}
 	_, err = client.Do(req)
 	if err != nil {
-		log.Error("Error sending to push gatway: " + err.Error())
+		log.WithError(err).Error("Error sending to push gateway")
 	}
 }
 
@@ -327,9 +340,7 @@ func (p *Prometheus) registerMetrics(subsystem string) {
 	for _, metricDef := range p.MetricsList {
 		metric := NewMetric(metricDef, subsystem)
 		if err := prometheus.Register(metric); err != nil {
-			log.Infof("%s could not be registered: ", metricDef.Name, err)
-		} else {
-			log.Infof("%s registered.", metricDef.Name)
+			log.WithError(err).Errorf("%s could not be registered in Prometheus", metricDef.Name)
 		}
 		switch metricDef {
 		case reqCnt:

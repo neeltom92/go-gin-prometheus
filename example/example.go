@@ -11,7 +11,7 @@ func main() {
 
 	p := ginprometheus.NewPrometheus("gin", nil)
 
-	p.Use(r)
+	p.Use(r, "/metrics")
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Hello world!")
 	})
