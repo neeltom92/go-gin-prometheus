@@ -20,8 +20,9 @@ import (
 func main() {
 	r := gin.New()
 
-	p := ginprometheus.NewPrometheus("gin")
-	p.Use(r)
+	p := ginprometheus.NewPrometheus("gin", []string{})
+	p.SetListenAddress(":9900")
+	p.Use(r, "/metrics")
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Hello world!")
@@ -30,8 +31,6 @@ func main() {
 	r.Run(":29090")
 }
 ```
-
-See the [example.go file](https://github.com/zsais/go-gin-prometheus/blob/master/example/example.go)
 
 ## Preserving a low cardinality for the request counter
 
@@ -44,8 +43,7 @@ high cardinality dimensions:
 https://prometheus.io/docs/practices/naming/#labels
 
 If you have for instance a `/customer/:name` templated route and you
-don't want to generate a time series for every possible customer name,
-you could supply this mapping function to the middleware:
+want to generate a time series for every possible customer name:
 
 ```go
 package main
@@ -58,20 +56,9 @@ import (
 func main() {
 	r := gin.New()
 
-	p := ginprometheus.NewPrometheus("gin")
-
-	p.ReqCntURLLabelMappingFn = func(c *gin.Context) string {
-		url := c.Request.URL.String()
-		for _, p := range c.Params {
-			if p.Key == "name" {
-				url = strings.Replace(url, p.Value, ":name", 1)
-				break
-			}
-		}
-		return url
-	}
-
-	p.Use(r)
+	p := ginprometheus.NewPrometheus("gin", []string{"name"})
+	p.SetListenAddress(":9900")
+	p.Use(r, "/metrics")
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Hello world!")
@@ -80,7 +67,3 @@ func main() {
 	r.Run(":29090")
 }
 ```
-
-which would map `/customer/alice` and `/customer/bob` to their
-template `/customer/:name`, and thus preserve a low cardinality for
-our metrics.
